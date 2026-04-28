@@ -30,8 +30,9 @@ export function Step5Payment({ onNext, onBack, initial }: Props) {
       if (!/^\d{4,17}$/.test(bankAccount)) return setError("Account number must be 4-17 digits");
       onNext({ method, bankRouting, bankAccount });
     } else {
-      if (!factoringAccount.trim()) return setError("Factoring account number required");
-      onNext({ method, factoringPartner, factoringAccount });
+      // Account number is optional — most factors get paid by mail or via a
+      // separate TMS, so carriers often don't have one to put on file here.
+      onNext({ method, factoringPartner, factoringAccount: factoringAccount.trim() || undefined });
     }
   }
 
@@ -95,12 +96,12 @@ export function Step5Payment({ onNext, onBack, initial }: Props) {
               {FACTORING_PARTNERS.map((f) => <option key={f} value={f}>{f}</option>)}
             </select>
           </Field>
-          <Field label="Factoring account #">
+          <Field label="Factoring account # (optional)">
             <input
               className="input mono"
               value={factoringAccount}
               onChange={(e) => setFactoringAccount(e.target.value)}
-              placeholder="Account ID with your factor"
+              placeholder="Leave blank if paid by mail / separate TMS"
             />
           </Field>
         </div>
