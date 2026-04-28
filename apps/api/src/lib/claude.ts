@@ -5,7 +5,21 @@ const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
 // Spec pins claude-sonnet-4-6. Allow override via env.
 const model = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-6";
 
-const client = new Anthropic({ apiKey });
+// Lazy — the SDK throws synchronously on construction with an empty apiKey.
+// Boot the app without a key and fail loudly only when a route tries to use it.
+let _client: Anthropic | null = null;
+function getClient(): Anthropic {
+  if (!_client) {
+    if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
+    _client = new Anthropic({ apiKey });
+  }
+  return _client;
+}
+const client = new Proxy({} as Anthropic, {
+  get(_t, prop: string | symbol) {
+    return Reflect.get(getClient(), prop);
+  },
+});
 
 const SYSTEM_PROMPT =
   "You are an expert freight broker assistant for Zulla Logistics. " +
