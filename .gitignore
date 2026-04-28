@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Vite
+.vite/
+apps/web/dev-dist/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env files (do not commit secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Drizzle
+drizzle/
+packages/db/drizzle/
+
+# Tests / coverage
+coverage/
+.nyc_output/
+
+# Railway
+.railway/
+
+# Misc
+.cache/
+.turbo/

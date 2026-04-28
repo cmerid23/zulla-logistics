@@ -1,0 +1,33 @@
+{
+  "name": "zulla-logistics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zulla Logistics — freight broker SaaS (PWA + API monorepo)",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter \"./apps/*\" run dev",
+    "dev:web": "pnpm --filter @zulla/web dev",
+    "dev:api": "pnpm --filter @zulla/api dev",
+    "build": "pnpm -r run build",
+    "build:web": "pnpm --filter @zulla/web build",
+    "build:api": "pnpm --filter @zulla/api build",
+    "start:api": "pnpm --filter @zulla/api start",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "db:generate": "pnpm --filter @zulla/db generate",
+    "db:migrate": "pnpm --filter @zulla/db migrate",
+    "db:push": "pnpm --filter @zulla/db push",
+    "db:studio": "pnpm --filter @zulla/db studio",
+    "clean": "pnpm -r exec rimraf dist .turbo node_modules/.cache"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "rimraf": "^5.0.7",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "pnpm@9.6.0"
+}

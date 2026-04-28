@@ -1,0 +1,25 @@
+# Railway monorepo deployment.
+# Two services share this repo: `api` and `web`. PostgreSQL is the managed plugin.
+
+[build]
+builder = "nixpacks"
+
+# ----- API service -----
+[[services]]
+name = "api"
+source = "apps/api"
+buildCommand = "pnpm install --frozen-lockfile && pnpm --filter @zulla/db build && pnpm --filter @zulla/shared build && pnpm --filter @zulla/api build"
+startCommand = "node dist/index.js"
+healthcheckPath = "/api/health"
+
+# ----- Web service -----
+[[services]]
+name = "web"
+source = "apps/web"
+buildCommand = "pnpm install --frozen-lockfile && pnpm --filter @zulla/shared build && pnpm --filter @zulla/web build"
+startCommand = "npx serve dist -l $PORT"
+
+# ----- PostgreSQL plugin -----
+[[services]]
+name = "postgres"
+plugin = "postgresql"
