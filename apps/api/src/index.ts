@@ -89,7 +89,8 @@ app.get("/readyz", (_req, res) => res.json({ ok: true }));
 
 // Root banner — friendly response when someone clicks the Railway-generated
 // API URL in a browser. Without this, "/" 404s and looks broken.
-app.get(["/", "/api"], (_req, res) => {
+// Express 5 + path-to-regexp v8 is picky about array paths, so register twice.
+const apiBanner = (_req: express.Request, res: express.Response) => {
   res.json({
     ok: true,
     service: "zulla-api",
@@ -97,7 +98,9 @@ app.get(["/", "/api"], (_req, res) => {
     health: "/api/health",
     web: process.env.VITE_APP_URL ?? null,
   });
-});
+};
+app.get("/", apiBanner);
+app.get("/api", apiBanner);
 
 // ----- API routes -----
 app.use("/api/auth", authRouter);
