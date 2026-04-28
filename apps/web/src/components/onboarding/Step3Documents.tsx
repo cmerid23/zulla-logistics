@@ -108,17 +108,23 @@ export function Step3Documents({ onNext, onBack, initial }: Props) {
   const allDone = SLOTS.every((s) => slots[s.type]?.status === "done");
 
   function submit() {
-    const data: UploadedDoc[] = SLOTS.map((s) => {
+    // Only forward slots that actually completed. Carriers can finish onboarding
+    // and upload remaining docs from their profile later — Step 3 is encouraged,
+    // not strictly required.
+    const data: UploadedDoc[] = SLOTS.flatMap((s) => {
       const st = slots[s.type];
-      return {
+      if (st.status !== "done") return [];
+      return [{
         type: s.type,
-        filename: st.filename!,
-        r2Key: st.r2Key!,
+        filename: st.filename ?? "",
+        r2Key: st.r2Key ?? "",
         fileSizeBytes: st.size ?? 0,
-      };
+      }];
     });
     onNext(data);
   }
+
+  const uploadedCount = SLOTS.filter((s) => slots[s.type]?.status === "done").length;
 
   return (
     <div className="space-y-6">
@@ -133,11 +139,16 @@ export function Step3Documents({ onNext, onBack, initial }: Props) {
         ))}
       </div>
 
-      <div className="flex justify-between pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-4">
         <button type="button" onClick={onBack} className="btn-ghost btn-lg">← Back</button>
-        <button type="button" onClick={submit} disabled={!allDone} className="btn-accent btn-lg">
-          {allDone ? "Continue →" : "Upload all to continue"}
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="mono text-[11px] uppercase tracking-wider text-muted">
+            {uploadedCount}/{SLOTS.length} uploaded
+          </span>
+          <button type="button" onClick={submit} className="btn-accent btn-lg">
+            {allDone ? "Continue →" : uploadedCount === 0 ? "Skip for now →" : "Continue →"}
+          </button>
+        </div>
       </div>
     </div>
   );
