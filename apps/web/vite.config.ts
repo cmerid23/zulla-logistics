@@ -31,27 +31,25 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         // App bundle is over the default 2MB cap because of Mapbox + Recharts.
-        // Bump to 5MB so Workbox precaches the main chunk and offline.html fallback works.
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
+          // API requests: try network first with a short timeout, fall back to
+          // cache only as a last resort. urlPattern matches any /api/ host so
+          // it works regardless of whether the API is at the Railway domain
+          // or a custom domain in future.
           {
-            urlPattern: /^https:\/\/api\.zullalogistics\.com\/api\/loads/,
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "loads-cache",
-              expiration: { maxAgeSeconds: 300 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/api\.zullalogistics\.com\/api\//,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              networkTimeoutSeconds: 10,
-            },
+            urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
+            handler: "NetworkOnly",
+            options: { cacheName: "api-cache" },
           },
         ],
-        navigateFallback: "/offline.html",
+        // SPA navigation fallback: serve the precached app shell for any
+        // navigation request that misses the precache. React Router handles
+        // routing client-side from there. Without this (or with a wrong
+        // value) the SW will hand back offline.html on every deep link, even
+        // when the user is online.
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/api\//, /^\/healthz/, /^\/readyz/],
       },
     }),
   ],
