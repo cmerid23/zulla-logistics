@@ -69,6 +69,14 @@ export default defineConfig({
       },
     },
   },
+  // `vite preview` is what Railway's start command uses for the web service.
+  // By default Vite preview returns 403 for requests whose Host header isn't
+  // on its allowlist. Set allowedHosts to `true` so the Railway edge proxy
+  // (which sets Host: <service>.up.railway.app) can serve the SPA.
+  preview: {
+    host: "0.0.0.0",
+    allowedHosts: true,
+  },
   build: {
     target: "es2022",
     sourcemap: true,
