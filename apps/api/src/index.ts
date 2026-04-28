@@ -33,14 +33,44 @@ import { startCronJobs } from "./jobs/index.js";
 const app = express();
 app.set("trust proxy", 1);
 
-// ----- CORS: production reads VITE_APP_URL (Railway web service URL); local dev defaults to :5173 -----
-const corsOrigin =
-  process.env.NODE_ENV === "production"
-    ? (process.env.VITE_APP_URL ?? process.env.WEB_ORIGIN ?? "").split(",").filter(Boolean)
-    : ["http://localhost:5173"];
+// ----- CORS allowlist -----
+// Builds the list at runtime from VITE_APP_URL / WEB_ORIGIN (comma-separated),
+// normalises trailing slashes + whitespace, and uses the function form so we
+// can echo back the Origin header that actually arrived (cors lib's array form
+// silently fails if the strings don't match exactly, including invisible chars).
+function buildCorsAllowlist(): string[] {
+  const fromEnv = `${process.env.VITE_APP_URL ?? ""},${process.env.WEB_ORIGIN ?? ""}`;
+  const list = fromEnv
+    .split(",")
+    .map((v) => v.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+  if (process.env.NODE_ENV !== "production") {
+    list.push("http://localhost:5173");
+  }
+  return list;
+}
+const allowlist = buildCorsAllowlist();
+console.log("[cors] allowlist:", allowlist.length ? allowlist : "(empty)");
 
-app.use(helmet());
-app.use(cors({ origin: corsOrigin, credentials: true }));
+app.use(
+  helmet({
+    // Default CORP "same-origin" blocks cross-origin reads at the browser
+    // level even when CORS allows the request. Web ↔ api live on different
+    // Railway subdomains, so loosen this to "cross-origin".
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // server-to-server, curl, mobile webviews
+      const normalised = origin.replace(/\/$/, "");
+      if (allowlist.includes(normalised)) return cb(null, true);
+      return cb(null, false);
+    },
+    credentials: true,
+  }),
+);
 app.use(compression());
 app.use(cookieParser());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
