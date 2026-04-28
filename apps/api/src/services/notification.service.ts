@@ -3,7 +3,6 @@ import { db, pushSubscriptions, users } from "@zulla/db";
 import type { PushSubscriptionInput } from "@zulla/shared";
 import { webpush } from "../lib/webpush.js";
 import { resend } from "../lib/resend.js";
-import { twilio } from "../lib/twilio.js";
 
 // =====================================================================
 // Unified notify(userId, type, data) — see spec.
@@ -32,19 +31,19 @@ export interface NotificationData {
 
 interface ChannelMix {
   push: boolean;
-  sms: boolean;
   email: boolean;
 }
 
 // Channel routing table — which transports each notification type uses.
+// Zulla uses in-app PWA push + transactional email only (no SMS).
 const CHANNELS: Record<NotificationType, ChannelMix> = {
-  carrier_approved:  { push: true,  sms: true,  email: true  },
-  load_booked:       { push: true,  sms: true,  email: true  },
-  pickup_reminder:   { push: true,  sms: true,  email: false },
-  pod_uploaded:      { push: true,  sms: false, email: true  },
-  invoice_sent:      { push: false, sms: false, email: true  },
-  payment_initiated: { push: true,  sms: true,  email: true  },
-  payment_confirmed: { push: true,  sms: false, email: true  },
+  carrier_approved:  { push: true,  email: true  },
+  load_booked:       { push: true,  email: true  },
+  pickup_reminder:   { push: true,  email: true  },
+  pod_uploaded:      { push: true,  email: true  },
+  invoice_sent:      { push: false, email: true  },
+  payment_initiated: { push: true,  email: true  },
+  payment_confirmed: { push: true,  email: true  },
 };
 
 interface BuiltMessage {
@@ -52,7 +51,6 @@ interface BuiltMessage {
   body: string;
   emailSubject: string;
   emailHtml: string;
-  smsBody: string;
   url?: string;
 }
 
@@ -69,7 +67,6 @@ function buildMessage(type: NotificationType, data: NotificationData): BuiltMess
         body: "Your carrier account is verified — start finding loads.",
         emailSubject: "You're verified — start finding loads",
         emailHtml: "<p>Your Zulla carrier account is approved. Sign in to view available loads.</p>",
-        smsBody: "Zulla: your carrier account is approved. Open the loadboard to start booking.",
         url,
       };
     case "load_booked":
@@ -78,7 +75,6 @@ function buildMessage(type: NotificationType, data: NotificationData): BuiltMess
         body: `Booked${lane}${ref}.`,
         emailSubject: `Load booked${ref}`,
         emailHtml: `<p>The load${lane}${ref} has been booked. Rate confirmation has been sent.</p>`,
-        smsBody: `Zulla: load booked${lane}${ref}.`,
         url,
       };
     case "pickup_reminder":
@@ -87,7 +83,6 @@ function buildMessage(type: NotificationType, data: NotificationData): BuiltMess
         body: `Pickup${lane}${ref} ${data.pickupAt ?? "soon"}.`,
         emailSubject: `Pickup reminder${ref}`,
         emailHtml: `<p>Reminder: pickup${lane}${ref} ${data.pickupAt ?? "soon"}.</p>`,
-        smsBody: `Zulla: pickup${lane}${ref} ${data.pickupAt ?? "soon"}.`,
         url,
       };
     case "pod_uploaded":
@@ -96,7 +91,6 @@ function buildMessage(type: NotificationType, data: NotificationData): BuiltMess
         body: `POD uploaded${ref}. Invoice generating.`,
         emailSubject: `POD received${ref}`,
         emailHtml: `<p>POD received${ref}. Your invoice is being prepared.</p>`,
-        smsBody: `Zulla: POD received${ref}.`,
         url,
       };
     case "invoice_sent":
@@ -105,7 +99,6 @@ function buildMessage(type: NotificationType, data: NotificationData): BuiltMess
         body: `Invoice ${data.invoiceNumber ?? ""} ${money ? "for " + money : ""}.`,
         emailSubject: `Invoice ${data.invoiceNumber ?? ""}`,
         emailHtml: `<p>Invoice ${data.invoiceNumber ?? ""} ${money ? "for " + money : ""} is ready in your portal.</p>`,
-        smsBody: `Zulla: invoice ${data.invoiceNumber ?? ""} ready.`,
         url,
       };
     case "payment_initiated":
@@ -114,7 +107,6 @@ function buildMessage(type: NotificationType, data: NotificationData): BuiltMess
         body: `Payment ${money ? "of " + money : ""} initiated${ref}.`,
         emailSubject: `Payment initiated${ref}`,
         emailHtml: `<p>Payment ${money ? "of " + money : ""} initiated${ref}. Funds typically arrive within 72 hours.</p>`,
-        smsBody: `Zulla: payment ${money ? "of " + money : ""} initiated${ref}.`,
         url,
       };
     case "payment_confirmed":
@@ -123,7 +115,6 @@ function buildMessage(type: NotificationType, data: NotificationData): BuiltMess
         body: `Payment ${money ?? ""} confirmed${ref}.`,
         emailSubject: `Payment confirmed${ref}`,
         emailHtml: `<p>Payment ${money ?? ""} confirmed${ref}. Thank you.</p>`,
-        smsBody: `Zulla: payment ${money ?? ""} confirmed${ref}.`,
         url,
       };
   }
@@ -136,15 +127,15 @@ function formatMoney(amount: string | number): string {
 }
 
 /**
- * Unified notification dispatcher. Routes to push + sms + email based on type.
+ * Unified notification dispatcher. Routes to push + email based on type.
  * Best-effort — failures in one transport do not block the others.
  */
 async function notify(
   userId: string,
   type: NotificationType,
   data: NotificationData = {},
-): Promise<{ push: boolean; sms: boolean; email: boolean }> {
-  const result = { push: false, sms: false, email: false };
+): Promise<{ push: boolean; email: boolean }> {
+  const result = { push: false, email: false };
   const mix = CHANNELS[type];
   const message = buildMessage(type, data);
 
@@ -157,14 +148,6 @@ async function notify(
       result.push = true;
     } catch (err) {
       console.warn("[notify] push failed", err);
-    }
-  }
-  if (mix.sms && user.phone) {
-    try {
-      await twilio.sendSms(user.phone, message.smsBody);
-      result.sms = true;
-    } catch (err) {
-      console.warn("[notify] sms failed", err);
     }
   }
   if (mix.email) {
@@ -229,10 +212,6 @@ async function sendEmail(to: string, subject: string, body: string) {
   return resend.send({ to, subject, html: body });
 }
 
-async function sendSms(to: string, body: string) {
-  return twilio.sendSms(to, body);
-}
-
 export const notificationService = {
   notify,
   savePushSubscription,
@@ -240,5 +219,4 @@ export const notificationService = {
   sendTestPush,
   sendPush,
   sendEmail,
-  sendSms,
 };

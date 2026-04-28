@@ -6,7 +6,6 @@ import { HttpError } from "../middleware/errorHandler.js";
 import { encrypt } from "../lib/encryption.js";
 import { fmcsa } from "../lib/fmcsa.js";
 import { resend } from "../lib/resend.js";
-import { twilio } from "../lib/twilio.js";
 
 interface CarrierRegisterInput {
   email: string;
@@ -99,11 +98,15 @@ export const carrierService = {
       .catch((err) => console.warn("[carrier] welcome email failed", err));
 
     if (!autoApprove) {
-      const adminPhone = process.env.ADMIN_REVIEW_PHONE;
-      if (adminPhone) {
-        twilio
-          .sendSms(adminPhone, `New carrier: ${input.companyName} — review needed.`)
-          .catch((err) => console.warn("[carrier] admin sms failed", err));
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (adminEmail) {
+        resend
+          .send({
+            to: adminEmail,
+            subject: `[Zulla] New carrier review needed — ${input.companyName}`,
+            html: `<p>New carrier application from <strong>${input.companyName}</strong> needs manual review.</p><p>FMCSA flags: ${fmcsaSummary?.flags?.join(", ") || "none"}.</p>`,
+          })
+          .catch((err) => console.warn("[carrier] admin notify email failed", err));
       }
     }
 

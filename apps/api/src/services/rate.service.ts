@@ -1,5 +1,5 @@
 import { dat } from "../lib/dat.js";
-import { getRateSuggestion, type RateSuggestionInput, type RateSuggestionResult } from "../lib/claude.js";
+import { getRateSuggestion, type RateSuggestionInput, type RateSuggestionResult } from "../lib/ai.js";
 import { db, aiRateSuggestions } from "@zulla/db";
 
 type RateRequest = RateSuggestionInput;

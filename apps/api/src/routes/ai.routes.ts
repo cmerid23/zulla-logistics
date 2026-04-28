@@ -3,7 +3,7 @@ import { z } from "zod";
 import { validate } from "../middleware/validate.js";
 import { requireAuth } from "../middleware/auth.js";
 import { rateService } from "../services/rate.service.js";
-import { claude } from "../lib/claude.js";
+import { ask as askAi } from "../lib/ai.js";
 
 const rateRequestSchema = z.object({
   originCity: z.string(),
@@ -35,7 +35,7 @@ aiRouter.post("/rate-suggestion", validate(rateRequestSchema), async (req, res, 
 
 aiRouter.post("/ask", validate(askSchema), async (req, res, next) => {
   try {
-    const answer = await claude.ask(req.body.prompt, req.body.context);
+    const answer = await askAi(req.body.prompt, req.body.context);
     res.json({ ok: true, data: { answer } });
   } catch (err) {
     next(err);

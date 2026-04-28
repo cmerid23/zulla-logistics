@@ -5,7 +5,6 @@ import { db, shipperLeads, agents } from "@zulla/db";
 import { validate } from "../middleware/validate.js";
 import { rateService } from "../services/rate.service.js";
 import { resend } from "../lib/resend.js";
-import { twilio } from "../lib/twilio.js";
 
 export const quoteRouter: Router = Router();
 
@@ -79,15 +78,16 @@ quoteRouter.post("/", validate(quoteSchema), async (req, res, next) => {
       })
       .catch((err) => console.warn("[quote] confirmation email failed", err));
 
-    // Notify territory agent (best effort).
-    const adminPhone = process.env.ADMIN_REVIEW_PHONE;
-    if (adminPhone) {
-      twilio
-        .sendSms(
-          adminPhone,
-          `Zulla lead: ${body.companyName} · ${body.originState}→${body.destState} · ${body.frequency}`,
-        )
-        .catch((err) => console.warn("[quote] sms notify failed", err));
+    // Notify territory agent / admin via email.
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      resend
+        .send({
+          to: adminEmail,
+          subject: `[Zulla lead] ${body.companyName} · ${body.originState}→${body.destState}`,
+          html: `<p>New capacity request:</p><ul><li><strong>${body.companyName}</strong> (${body.contactName})</li><li>${body.email} · ${body.phone}</li><li>${body.originCity}, ${body.originState} → ${body.destCity}, ${body.destState}</li><li>${body.equipmentType} · ${body.frequency}</li>${suggestion ? `<li>Estimated rate: $${suggestion.shipperRate.toFixed(0)}</li>` : ""}</ul>`,
+        })
+        .catch((err) => console.warn("[quote] admin notify email failed", err));
     }
 
     res.status(201).json({
