@@ -87,6 +87,18 @@ app.use("/api", healthRouter);
 app.get("/healthz", (_req, res) => res.json({ ok: true, service: "zulla-api" }));
 app.get("/readyz", (_req, res) => res.json({ ok: true }));
 
+// Root banner — friendly response when someone clicks the Railway-generated
+// API URL in a browser. Without this, "/" 404s and looks broken.
+app.get(["/", "/api"], (_req, res) => {
+  res.json({
+    ok: true,
+    service: "zulla-api",
+    message: "Zulla Logistics API is running.",
+    health: "/api/health",
+    web: process.env.VITE_APP_URL ?? null,
+  });
+});
+
 // ----- API routes -----
 app.use("/api/auth", authRouter);
 app.use("/api/loads", loadsRouter);
