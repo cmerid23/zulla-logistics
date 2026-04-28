@@ -1,0 +1,17 @@
+**/node_modules
+**/dist
+**/.turbo
+**/.next
+**/build
+.git
+.github
+.vscode
+.idea
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+coverage
+.nyc_output
+.pnpm-store
