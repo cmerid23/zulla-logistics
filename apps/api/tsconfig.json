@@ -8,8 +8,13 @@
     "lib": ["ES2022"],
     "types": ["node"],
     "declaration": false,
-    "sourceMap": true
+    "sourceMap": true,
+    // Pragmatic relaxations for the API surface — see types/express.d.ts.
+    // We rely on the post-`.returning()` row being present after a successful
+    // insert/update, and the `if (!row)` guards explicitly handle the rare
+    // failure path. Drizzle's destructure type otherwise forces ?? everywhere.
+    "noUncheckedIndexedAccess": false
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist", "test"]
 }

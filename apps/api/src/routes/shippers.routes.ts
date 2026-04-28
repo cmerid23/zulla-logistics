@@ -121,7 +121,7 @@ shippersRouter.get("/me/loads/export", requireAuth(["shipper"]), async (req, res
 
 shippersRouter.get("/:id", async (req, res, next) => {
   try {
-    const row = await db.query.shippers.findFirst({ where: eq(shippers.id, req.params.id) });
+    const row = await db.query.shippers.findFirst({ where: eq(shippers.id, req.params.id as string) });
     res.json({ ok: true, data: row ?? null });
   } catch (err) {
     next(err);

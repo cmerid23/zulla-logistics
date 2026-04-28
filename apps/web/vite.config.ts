@@ -30,6 +30,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // App bundle is over the default 2MB cap because of Mapbox + Recharts.
+        // Bump to 5MB so Workbox precaches the main chunk and offline.html fallback works.
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.zullalogistics\.com\/api\/loads/,

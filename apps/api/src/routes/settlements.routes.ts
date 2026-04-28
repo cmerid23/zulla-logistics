@@ -21,7 +21,7 @@ settlementsRouter.get("/", async (req, res, next) => {
 settlementsRouter.get("/:id/pdf", async (req, res, next) => {
   try {
     const rows = await settlementService.list(req.user!);
-    const settlement = rows.find((s) => s.id === req.params.id);
+    const settlement = rows.find((s) => s.id === req.params.id as string);
     if (!settlement || !settlement.pdfR2Key) {
       return res.status(404).json({ ok: false, error: { message: "Settlement PDF not found" } });
     }
@@ -37,7 +37,7 @@ settlementsRouter.post(
   validate(settlementGenerateSchema),
   async (req, res, next) => {
     try {
-      const row = await settlementService.generate(req.params.loadId, req.body, req.user!);
+      const row = await settlementService.generate(req.params.loadId as string, req.body, req.user!);
       res.status(201).json({ ok: true, data: row });
     } catch (err) {
       next(err);
@@ -50,7 +50,7 @@ settlementsRouter.post(
   validate(settlementFactorSchema),
   async (req, res, next) => {
     try {
-      const row = await settlementService.submitFactoring(req.params.id, req.body, req.user!);
+      const row = await settlementService.submitFactoring(req.params.id as string, req.body, req.user!);
       res.json({ ok: true, data: row });
     } catch (err) {
       next(err);
@@ -60,7 +60,7 @@ settlementsRouter.post(
 
 settlementsRouter.patch("/:id/paid", async (req, res, next) => {
   try {
-    const row = await settlementService.markPaid(req.params.id, req.user!);
+    const row = await settlementService.markPaid(req.params.id as string, req.user!);
     res.json({ ok: true, data: row });
   } catch (err) {
     next(err);

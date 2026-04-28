@@ -87,7 +87,7 @@ carriersRouter.patch(
 
 carriersRouter.get("/:id", async (req, res, next) => {
   try {
-    const carrier = await carrierService.getById(req.params.id);
+    const carrier = await carrierService.getById(req.params.id as string);
     res.json({ ok: true, data: carrier });
   } catch (err) {
     next(err);
@@ -113,7 +113,7 @@ carriersRouter.post(
   requireAuth(["admin", "agent"]),
   async (req, res, next) => {
     try {
-      const carrier = await carrierService.approve(req.params.id, req.user!);
+      const carrier = await carrierService.approve(req.params.id as string, req.user!);
       res.json({ ok: true, data: carrier });
     } catch (err) {
       next(err);
@@ -126,7 +126,7 @@ carriersRouter.post(
   requireAuth(["admin", "agent"]),
   async (req, res, next) => {
     try {
-      const carrier = await carrierService.suspend(req.params.id, req.user!, req.body?.reason);
+      const carrier = await carrierService.suspend(req.params.id as string, req.user!, req.body?.reason);
       res.json({ ok: true, data: carrier });
     } catch (err) {
       next(err);
@@ -141,7 +141,7 @@ carriersRouter.post(
   validate(rejectSchema),
   async (req, res, next) => {
     try {
-      const carrier = await carrierService.reject(req.params.id, req.user!, req.body.reason);
+      const carrier = await carrierService.reject(req.params.id as string, req.user!, req.body.reason);
       res.json({ ok: true, data: carrier });
     } catch (err) {
       next(err);
@@ -156,7 +156,7 @@ const dnuHandler = async (
   next: import("express").NextFunction,
 ) => {
   try {
-    const carrier = await carrierService.suspend(req.params.id, req.user!, req.body.reason);
+    const carrier = await carrierService.suspend(req.params.id as string, req.user!, req.body.reason);
     res.json({ ok: true, data: carrier });
   } catch (err) {
     next(err);

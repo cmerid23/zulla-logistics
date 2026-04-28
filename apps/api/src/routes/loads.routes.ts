@@ -25,7 +25,7 @@ loadsRouter.get("/:id/events", requireAuth(["admin", "shipper", "carrier", "agen
       const [latest] = await db
         .select()
         .from(trackingEvents)
-        .where(eq(trackingEvents.loadId, req.params.id))
+        .where(eq(trackingEvents.loadId, req.params.id as string))
         .orderBy(desc(trackingEvents.timestamp))
         .limit(1);
       if (latest && latest.id !== lastSentId) {
@@ -56,7 +56,7 @@ loadsRouter.get("/", validate(loadFiltersSchema, "query"), async (req, res, next
 
 loadsRouter.get("/:id", async (req, res, next) => {
   try {
-    const load = await loadService.getById(req.params.id, req.user!);
+    const load = await loadService.getById(req.params.id as string, req.user!);
     res.json({ ok: true, data: load });
   } catch (err) {
     next(err);
@@ -83,7 +83,7 @@ loadsRouter.patch(
   validate(updateLoadSchema),
   async (req, res, next) => {
     try {
-      const load = await loadService.update(req.params.id, req.body, req.user!);
+      const load = await loadService.update(req.params.id as string, req.body, req.user!);
       res.json({ ok: true, data: load });
     } catch (err) {
       next(err);
@@ -93,7 +93,7 @@ loadsRouter.patch(
 
 loadsRouter.post("/:id/book", requireAuth(["carrier"]), async (req, res, next) => {
   try {
-    const result = await loadService.book(req.params.id, req.user!);
+    const result = await loadService.book(req.params.id as string, req.user!);
     res.json({ ok: true, data: result });
   } catch (err) {
     next(err);
@@ -108,7 +108,7 @@ loadsRouter.post(
   validate(verifyRateConSchema),
   async (req, res, next) => {
     try {
-      const result = await loadService.verifyRateCon(req.params.id, req.body.code, req.user!);
+      const result = await loadService.verifyRateCon(req.params.id as string, req.body.code, req.user!);
       res.json({ ok: true, data: result });
     } catch (err) {
       next(err);
@@ -126,7 +126,7 @@ loadsRouter.patch(
   validate(statusUpdateSchema),
   async (req, res, next) => {
     try {
-      const result = await loadService.updateStatus(req.params.id, req.body.status, req.user!);
+      const result = await loadService.updateStatus(req.params.id as string, req.body.status, req.user!);
       res.json({ ok: true, data: result });
     } catch (err) {
       next(err);
@@ -146,7 +146,7 @@ loadsRouter.post(
   validate(trackingSchema),
   async (req, res, next) => {
     try {
-      const result = await loadService.recordTracking(req.params.id, req.body, req.user!);
+      const result = await loadService.recordTracking(req.params.id as string, req.body, req.user!);
       res.status(201).json({ ok: true, data: result });
     } catch (err) {
       next(err);
@@ -159,7 +159,7 @@ loadsRouter.post(
   requireAuth(["admin", "agent", "shipper"]),
   async (req, res, next) => {
     try {
-      const load = await loadService.cancel(req.params.id, req.user!);
+      const load = await loadService.cancel(req.params.id as string, req.user!);
       res.json({ ok: true, data: load });
     } catch (err) {
       next(err);
@@ -180,7 +180,7 @@ loadsRouter.post(
       });
       if (!carrier) throw new HttpError(400, "Carrier profile not found");
 
-      const load = await db.query.loads.findFirst({ where: eq(loads.id, req.params.id) });
+      const load = await db.query.loads.findFirst({ where: eq(loads.id, req.params.id as string) });
       if (!load) throw new HttpError(404, "Load not found");
       if (load.carrierId !== carrier.id) throw new HttpError(403, "Not your load");
 
@@ -225,7 +225,7 @@ loadsRouter.get("/:id/assignment", requireAuth(["carrier", "admin"]), async (req
       .from(loadAssignments)
       .leftJoin(drivers, eq(drivers.id, loadAssignments.driverId))
       .leftJoin(trucks, eq(trucks.id, loadAssignments.truckId))
-      .where(eq(loadAssignments.loadId, req.params.id))
+      .where(eq(loadAssignments.loadId, req.params.id as string))
       .orderBy(desc(loadAssignments.assignedAt))
       .limit(1);
     res.json({ ok: true, data: rows[0] ?? null });

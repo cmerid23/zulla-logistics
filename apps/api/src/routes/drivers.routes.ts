@@ -19,7 +19,7 @@ driversRouter.get("/", async (req, res, next) => {
 
 driversRouter.get("/:id", async (req, res, next) => {
   try {
-    const row = await driverService.getById(req.params.id, req.user!);
+    const row = await driverService.getById(req.params.id as string, req.user!);
     res.json({ ok: true, data: row });
   } catch (err) {
     next(err);
@@ -37,7 +37,7 @@ driversRouter.post("/", validate(createDriverSchema), async (req, res, next) => 
 
 driversRouter.patch("/:id", validate(updateDriverSchema), async (req, res, next) => {
   try {
-    const row = await driverService.update(req.params.id, req.body, req.user!);
+    const row = await driverService.update(req.params.id as string, req.body, req.user!);
     res.json({ ok: true, data: row });
   } catch (err) {
     next(err);

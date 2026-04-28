@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import type { SignOptions } from "jsonwebtoken";
 import { eq } from "drizzle-orm";
 import { db, users, shippers, carriers } from "@zulla/db";
 import type { AuthTokens, AuthUser, RegisterInput, LoginInput } from "@zulla/shared";
@@ -12,7 +13,10 @@ const REFRESH_TTL_DAYS = 7;
 function signAccess(user: AuthUser): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) throw new HttpError(500, "JWT not configured");
-  return jwt.sign(user, secret, { expiresIn: ACCESS_TTL });
+  // `expiresIn` accepts a literal-typed string ("15m", "1h"…) but env-derived
+  // values are plain `string`; cast through SignOptions to keep TS happy.
+  const options = { expiresIn: ACCESS_TTL } as SignOptions;
+  return jwt.sign(user, secret, options);
 }
 
 function makeRandomSecret(): string {

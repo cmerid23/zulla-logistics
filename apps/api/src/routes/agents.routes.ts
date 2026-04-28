@@ -258,13 +258,13 @@ agentsRouter.post(
       const updated = await db
         .update(agentCommissions)
         .set({ status: "paid", paidAt: new Date() })
-        .where(and(eq(agentCommissions.agentId, req.params.id), eq(agentCommissions.status, "pending")))
+        .where(and(eq(agentCommissions.agentId, req.params.id as string), eq(agentCommissions.status, "pending")))
         .returning();
 
       const totalPaid = updated.reduce((sum, r) => sum + Number(r.commissionAmount), 0);
       res.json({
         ok: true,
-        data: { agentId: req.params.id, count: updated.length, totalPaid },
+        data: { agentId: req.params.id as string, count: updated.length, totalPaid },
       });
     } catch (err) {
       next(err);

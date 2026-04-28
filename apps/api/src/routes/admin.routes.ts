@@ -36,7 +36,7 @@ adminRouter.get("/loads", async (_req, res, next) => {
 // DAT responses for a specific load (inquiries returned by DAT One).
 adminRouter.get("/loads/:id/dat-responses", async (req, res, next) => {
   try {
-    const load = await db.query.loads.findFirst({ where: eq(loads.id, req.params.id) });
+    const load = await db.query.loads.findFirst({ where: eq(loads.id, req.params.id as string) });
     if (!load) {
       return res.status(404).json({ ok: false, error: { message: "Load not found" } });
     }
@@ -56,10 +56,10 @@ adminRouter.post("/agents/:id/pay-commission", async (req, res, next) => {
     const updated = await db
       .update(agentCommissions)
       .set({ status: "paid", paidAt: new Date() })
-      .where(and(eq(agentCommissions.agentId, req.params.id), eq(agentCommissions.status, "pending")))
+      .where(and(eq(agentCommissions.agentId, req.params.id as string), eq(agentCommissions.status, "pending")))
       .returning();
     const totalPaid = updated.reduce((sum, r) => sum + Number(r.commissionAmount), 0);
-    res.json({ ok: true, data: { agentId: req.params.id, count: updated.length, totalPaid } });
+    res.json({ ok: true, data: { agentId: req.params.id as string, count: updated.length, totalPaid } });
   } catch (err) {
     next(err);
   }
@@ -159,7 +159,7 @@ adminRouter.get("/users", async (_req, res, next) => {
 adminRouter.post("/users/:id/disable", async (req, res, next) => {
   try {
     // Soft-disable by clearing the refresh token; we don't have an isActive column.
-    await db.update(users).set({ refreshToken: null }).where(eq(users.id, req.params.id));
+    await db.update(users).set({ refreshToken: null }).where(eq(users.id, req.params.id as string));
     res.json({ ok: true, data: { ok: true } });
   } catch (err) {
     next(err);
@@ -173,7 +173,7 @@ adminRouter.patch("/loads/:id/reassign", validate(reassignSchema), async (req, r
     const [updated] = await db
       .update(loads)
       .set({ carrierId: req.body.carrierId, updatedAt: new Date() })
-      .where(eq(loads.id, req.params.id))
+      .where(eq(loads.id, req.params.id as string))
       .returning();
     res.json({ ok: true, data: updated });
   } catch (err) {
@@ -191,7 +191,7 @@ adminRouter.patch("/loads/:id/status", validate(forceStatusSchema), async (req, 
     const [updated] = await db
       .update(loads)
       .set({ status: req.body.status, updatedAt: new Date() })
-      .where(eq(loads.id, req.params.id))
+      .where(eq(loads.id, req.params.id as string))
       .returning();
     res.json({ ok: true, data: updated });
   } catch (err) {
@@ -205,7 +205,7 @@ adminRouter.patch("/loads/:id/note", validate(noteSchema), async (req, res, next
     const [updated] = await db
       .update(loads)
       .set({ internalNotes: req.body.note, updatedAt: new Date() })
-      .where(eq(loads.id, req.params.id))
+      .where(eq(loads.id, req.params.id as string))
       .returning();
     res.json({ ok: true, data: updated });
   } catch (err) {
@@ -249,7 +249,7 @@ adminRouter.post("/loads/bulk-export", validate(bulkExportSchema), async (req, r
 
 adminRouter.post("/loads/:id/post-dat", async (req, res, next) => {
   try {
-    const load = await db.query.loads.findFirst({ where: eq(loads.id, req.params.id) });
+    const load = await db.query.loads.findFirst({ where: eq(loads.id, req.params.id as string) });
     if (!load) return res.status(404).json({ ok: false, error: { message: "Load not found" } });
     const result = await dat.postLoad(load).catch((err) => ({ error: (err as Error).message }));
     if ("error" in result) {
@@ -276,7 +276,7 @@ adminRouter.patch("/shippers/:id", validate(shipperEditSchema), async (req, res,
     const [updated] = await db
       .update(shippers)
       .set({ ...req.body, updatedAt: new Date() })
-      .where(eq(shippers.id, req.params.id))
+      .where(eq(shippers.id, req.params.id as string))
       .returning();
     res.json({ ok: true, data: updated });
   } catch (err) {

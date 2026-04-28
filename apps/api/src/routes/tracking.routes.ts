@@ -11,7 +11,7 @@ export const trackingRouter: Router = Router();
 trackingRouter.get("/public/:token", optionalAuth, async (req, res, next) => {
   try {
     const load = await db.query.loads.findFirst({
-      where: eq(loads.trackingLinkToken, req.params.token),
+      where: eq(loads.trackingLinkToken, req.params.token as string),
     });
     if (!load) {
       return res.status(404).json({ ok: false, error: { message: "Load not found" } });
@@ -68,8 +68,8 @@ trackingRouter.get("/loads/:loadId", async (req, res, next) => {
     const events = await db
       .select()
       .from(trackingEvents)
-      .where(eq(trackingEvents.loadId, req.params.loadId));
-    res.json({ ok: true, data: { loadId: req.params.loadId, events } });
+      .where(eq(trackingEvents.loadId, req.params.loadId as string));
+    res.json({ ok: true, data: { loadId: req.params.loadId as string, events } });
   } catch (err) {
     next(err);
   }

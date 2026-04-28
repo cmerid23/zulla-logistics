@@ -9,7 +9,7 @@ export const trackRouter: Router = Router();
 trackRouter.get("/:token", async (req, res, next) => {
   try {
     const load = await db.query.loads.findFirst({
-      where: eq(loads.trackingLinkToken, req.params.token),
+      where: eq(loads.trackingLinkToken, req.params.token as string),
     });
     if (!load) {
       return res.status(404).json({ ok: false, error: { message: "Load not found" } });

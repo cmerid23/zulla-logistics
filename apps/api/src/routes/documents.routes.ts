@@ -114,7 +114,7 @@ documentsRouter.get("/by-load/:loadId", async (req, res, next) => {
   try {
     const { eq } = await import("drizzle-orm");
     const { db, documents } = await import("@zulla/db");
-    const rows = await db.select().from(documents).where(eq(documents.loadId, req.params.loadId));
+    const rows = await db.select().from(documents).where(eq(documents.loadId, req.params.loadId as string));
     res.json({ ok: true, data: rows });
   } catch (err) {
     next(err);
@@ -125,7 +125,7 @@ documentsRouter.get("/by-carrier/:carrierId", async (req, res, next) => {
   try {
     const { eq } = await import("drizzle-orm");
     const { db, documents } = await import("@zulla/db");
-    const rows = await db.select().from(documents).where(eq(documents.carrierId, req.params.carrierId));
+    const rows = await db.select().from(documents).where(eq(documents.carrierId, req.params.carrierId as string));
     res.json({ ok: true, data: rows });
   } catch (err) {
     next(err);
@@ -134,7 +134,7 @@ documentsRouter.get("/by-carrier/:carrierId", async (req, res, next) => {
 
 documentsRouter.get("/:id/url", async (req, res, next) => {
   try {
-    const url = await documentService.getDownloadUrl(req.params.id, req.user!);
+    const url = await documentService.getDownloadUrl(req.params.id as string, req.user!);
     res.json({ ok: true, data: { url } });
   } catch (err) {
     next(err);
@@ -143,7 +143,7 @@ documentsRouter.get("/:id/url", async (req, res, next) => {
 
 documentsRouter.delete("/:id", async (req, res, next) => {
   try {
-    await documentService.remove(req.params.id, req.user!);
+    await documentService.remove(req.params.id as string, req.user!);
     res.json({ ok: true, data: { ok: true } });
   } catch (err) {
     next(err);

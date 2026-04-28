@@ -35,7 +35,7 @@ invoicesRouter.get("/me", requireAuth(["shipper"]), async (req, res, next) => {
 
 invoicesRouter.get("/:id", async (req, res, next) => {
   try {
-    const invoice = await invoiceService.getById(req.params.id, req.user!);
+    const invoice = await invoiceService.getById(req.params.id as string, req.user!);
     res.json({ ok: true, data: invoice });
   } catch (err) {
     next(err);
@@ -44,7 +44,7 @@ invoicesRouter.get("/:id", async (req, res, next) => {
 
 invoicesRouter.post("/from-load/:loadId", async (req, res, next) => {
   try {
-    const invoice = await invoiceService.createFromLoad(req.params.loadId, req.user!);
+    const invoice = await invoiceService.createFromLoad(req.params.loadId as string, req.user!);
     res.status(201).json({ ok: true, data: invoice });
   } catch (err) {
     next(err);
@@ -53,7 +53,7 @@ invoicesRouter.post("/from-load/:loadId", async (req, res, next) => {
 
 invoicesRouter.get("/:id/pdf", async (req, res, next) => {
   try {
-    const url = await invoiceService.getPdfUrl(req.params.id, req.user!);
+    const url = await invoiceService.getPdfUrl(req.params.id as string, req.user!);
     res.json({ ok: true, data: { url } });
   } catch (err) {
     next(err);
@@ -64,7 +64,7 @@ invoicesRouter.get("/:id/pdf", async (req, res, next) => {
 // return its clientSecret so the Payment Element on the web can confirm.
 invoicesRouter.post("/:id/pay", requireAuth(["shipper"]), async (req, res, next) => {
   try {
-    const invoice = await invoiceService.getById(req.params.id, req.user!);
+    const invoice = await invoiceService.getById(req.params.id as string, req.user!);
     if (invoice.status === "paid") {
       return res.status(409).json({ ok: false, error: { message: "Invoice already paid" } });
     }
@@ -93,7 +93,7 @@ invoicesRouter.post("/:id/pay", requireAuth(["shipper"]), async (req, res, next)
 invoicesRouter.post("/:id/factoring", requireAuth(["admin"]), async (req, res, next) => {
   try {
     const invoice = await invoiceService.submitFactoring(
-      req.params.id,
+      req.params.id as string,
       req.user!,
       req.body?.partner ?? "",
       req.body?.notes,
@@ -108,7 +108,7 @@ invoicesRouter.post("/:id/factoring", requireAuth(["admin"]), async (req, res, n
 invoicesRouter.patch("/:id/paid", requireAuth(["admin"]), async (req, res, next) => {
   try {
     const invoice = await invoiceService.markPaid(
-      req.params.id,
+      req.params.id as string,
       req.user!,
       req.body?.stripePaymentIntentId,
     );
@@ -121,7 +121,7 @@ invoicesRouter.patch("/:id/paid", requireAuth(["admin"]), async (req, res, next)
 // Admin: approve an invoice (issued state).
 invoicesRouter.post("/:id/approve", requireAuth(["admin"]), async (req, res, next) => {
   try {
-    const invoice = await invoiceService.approve(req.params.id, req.user!);
+    const invoice = await invoiceService.approve(req.params.id as string, req.user!);
     res.json({ ok: true, data: invoice });
   } catch (err) {
     next(err);

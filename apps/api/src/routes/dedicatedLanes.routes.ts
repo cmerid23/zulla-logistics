@@ -94,7 +94,7 @@ dedicatedLanesRouter.post(
   async (req, res, next) => {
     try {
       const lane = await db.query.dedicatedLanes.findFirst({
-        where: eq(dedicatedLanes.id, req.params.id),
+        where: eq(dedicatedLanes.id, req.params.id as string),
       });
       if (!lane) throw new HttpError(404, "Lane not found");
 
@@ -129,7 +129,7 @@ dedicatedLanesRouter.post("/:id/sign", requireAuth(["shipper"]), async (req, res
     const [updated] = await db
       .update(dedicatedLanes)
       .set({ status: "active", signedByShipperAt: new Date() })
-      .where(and(eq(dedicatedLanes.id, req.params.id), eq(dedicatedLanes.shipperId, shipper.id)))
+      .where(and(eq(dedicatedLanes.id, req.params.id as string), eq(dedicatedLanes.shipperId, shipper.id)))
       .returning();
     if (!updated) throw new HttpError(404, "Lane not found");
     res.json({ ok: true, data: updated });
@@ -141,7 +141,7 @@ dedicatedLanesRouter.post("/:id/sign", requireAuth(["shipper"]), async (req, res
 dedicatedLanesRouter.get("/:id/agreement", async (req, res, next) => {
   try {
     const lane = await db.query.dedicatedLanes.findFirst({
-      where: eq(dedicatedLanes.id, req.params.id),
+      where: eq(dedicatedLanes.id, req.params.id as string),
     });
     if (!lane?.agreementPdfR2Key) {
       return res.status(404).json({ ok: false, error: { message: "Agreement not generated yet" } });

@@ -40,9 +40,12 @@ export async function subscribeToPush(): Promise<"subscribed" | "denied" | "unsu
 
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
+    // TS5.7's generic Uint8Array<ArrayBufferLike> doesn't fit BufferSource directly;
+    // cast through BufferSource since the bytes are always backed by ArrayBuffer here.
+    const applicationServerKey = urlBase64ToUint8Array(key) as unknown as BufferSource;
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(key),
+      applicationServerKey,
     });
   }
 
