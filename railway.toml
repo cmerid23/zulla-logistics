@@ -3,9 +3,9 @@
 # Two services share this repo: `api` and `web`. PostgreSQL is added as a
 # managed plugin from the dashboard, which auto-injects DATABASE_URL.
 #
-# Per-service build/start commands live in the Railway dashboard so each
-# service can target the right pnpm workspace from the same monorepo root.
-# See README.md for the exact dashboard settings.
+# Per-service build/start commands AND healthcheck paths live in the
+# Railway dashboard so each service can target the right pnpm workspace
+# and the right HTTP path. See README.md for the exact dashboard settings.
 
 [build]
 builder = "nixpacks"
